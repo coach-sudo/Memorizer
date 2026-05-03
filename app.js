@@ -1,4 +1,4 @@
-﻿const state = {
+const state = {
   raw: "",
   lines: [],
   originalLines: [],
@@ -151,6 +151,7 @@ const els = {
   saveBtn: document.getElementById("saveBtn"),
   loadBtn: document.getElementById("loadBtn"),
   resetBtn: document.getElementById("resetBtn"),
+  fullscreenBtn: document.getElementById("fullscreenBtn"),
   exportBtn: document.getElementById("exportBtn"),
   toast: document.getElementById("toast")
 };
@@ -1969,6 +1970,29 @@ els.resetBtn.addEventListener("click", resetAll);
 els.exportBtn.addEventListener("click", exportReport);
 els.nextActionBtn.addEventListener("click", () => {
   advanceCurrentFlow();
+});
+async function toggleFullscreen() {
+  try {
+    if (!document.fullscreenElement) {
+      await document.documentElement.requestFullscreen();
+      els.fullscreenBtn.textContent = "Exit Full Screen";
+      document.body.classList.add("fullscreen-mode");
+    } else {
+      await document.exitFullscreen();
+      els.fullscreenBtn.textContent = "Full Screen";
+      document.body.classList.remove("fullscreen-mode");
+    }
+  } catch (_error) {
+    notify("Full screen is not available in this browser.", false);
+  }
+}
+
+els.fullscreenBtn.addEventListener("click", toggleFullscreen);
+
+document.addEventListener("fullscreenchange", () => {
+  const active = !!document.fullscreenElement;
+  els.fullscreenBtn.textContent = active ? "Exit Full Screen" : "Full Screen";
+  document.body.classList.toggle("fullscreen-mode", active);
 });
 document.addEventListener("keydown", event => {
   if (state.mode === "tap" && (event.code === "Space" || event.code === "Enter")) {
