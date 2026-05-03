@@ -740,7 +740,7 @@ function modeHelp() {
   const help = {
     full: "Read normally. Your lines are highlighted and cues stay visible.",
     letters: "Your lines become first letters while punctuation and word rhythm stay intact.",
-    ghost: "Your lines fade so you let go of the page.",
+    ghost: "Use the visibility slider to fade your lines from readable to nearly gone.",
     blanks: "Key words disappear for precision recall.",
     tap: "Advance your words one unit at a time.",
     punctuation: "Punctuation disappears so you can find your own rhythm."
@@ -752,30 +752,33 @@ function isMonologue() {
   return state.characters.length === 1 || state.currentCharacter === "MONOLOGUE";
 }
 
-function shouldHardHideLine(line, isMine) {
-  if (!isMine) return false;
-
-  const wasPeeked = state.peekedLineIds.includes(line.id);
-  if (wasPeeked) return false;
-
-  return state.activePreset === "offbook" || state.activePreset === "stress";
-}
-
 function renderLineText(line, isMine) {
   if (!isMine) return escapeHtml(line.text);
 
-  if (shouldHardHideLine(line, isMine)) {
-    return `<span class="hidden-line">Hidden. Recall it first, then peek.</span>`;
+  const opacity = Number(els.visibilityRange.value) / 100;
+  const wasPeeked = state.peekedLineIds.includes(line.id);
+
+  if (wasPeeked) {
+    return `<span style="opacity:1" class="ghost-text">${escapeHtml(line.text)}</span>`;
   }
 
-  const opacity = Number(els.visibilityRange.value) / 100;
+  if (state.mode === "letters") {
+    return `<span style="opacity:${Math.max(opacity, 0.35)}" class="ghost-text">${escapeHtml(firstLetters(line.text))}</span>`;
+  }
 
-  if (state.mode === "letters") return escapeHtml(firstLetters(line.text));
-  if (state.mode === "ghost") return `<span style="opacity:${opacity}" class="ghost-text">${escapeHtml(line.text)}</span>`;
-  if (state.mode === "blanks") return blankWords(line.text);
-  if (state.mode === "punctuation") return escapeHtml(line.text.replace(/[.,!?;:\u2014-]/g, ""));
+  if (state.mode === "ghost") {
+    return `<span style="opacity:${opacity}" class="ghost-text">${escapeHtml(line.text)}</span>`;
+  }
 
-  return `<span style="opacity:${opacity}">${escapeHtml(line.text)}</span>`;
+  if (state.mode === "blanks") {
+    return `<span style="opacity:${Math.max(opacity, 0.25)}" class="ghost-text">${blankWords(line.text)}</span>`;
+  }
+
+  if (state.mode === "punctuation") {
+    return `<span style="opacity:${Math.max(opacity, 0.2)}" class="ghost-text">${escapeHtml(line.text.replace(/[.,!?;:\u2014-]/g, ""))}</span>`;
+  }
+
+  return `<span style="opacity:${opacity}" class="ghost-text">${escapeHtml(line.text)}</span>`;
 }
 
 function firstLetters(text) {
@@ -1423,11 +1426,11 @@ function applyPreset(name) {
   state.searchQuery = "";
   els.searchInput.value = "";
   const presets = {
-    warmup: { mode: "full", training: "scene", trigger: "tap", blanks: 1, visibility: 100, chaos: false },
-    memorize: { mode: "letters", training: "ladder", trigger: "tap", blanks: 1, visibility: 75, chaos: false },
-    offbook: { mode: "blanks", training: "scene", trigger: "voice", blanks: 3, visibility: 25, chaos: false },
-    stress: { mode: "punctuation", training: "reverse", trigger: "voice", blanks: 3, visibility: 0, chaos: true }
-  };
+  warmup: { mode: "full", training: "scene", trigger: "tap", blanks: 1, visibility: 100, chaos: false },
+  memorize: { mode: "letters", training: "ladder", trigger: "tap", blanks: 1, visibility: 75, chaos: false },
+  offbook: { mode: "blanks", training: "scene", trigger: "voice", blanks: 3, visibility: 25, chaos: false },
+  stress: { mode: "punctuation", training: "reverse", trigger: "voice", blanks: 3, visibility: 10, chaos: true }
+};
   const preset = presets[name];
   if (!preset) return;
   state.activePreset = name;
