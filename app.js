@@ -2,6 +2,8 @@ const state = {
   raw: "",
   lines: [],
   originalLines: [],
+  activePreset: "warmup",
+  peekedLineIds: [],
   characters: [],
   currentCharacter: "",
   mode: "full",
@@ -752,11 +754,21 @@ function isMonologue() {
 
 function renderLineText(line, isMine) {
   if (!isMine) return escapeHtml(line.text);
+
+  const isWarmup = state.activePreset === "warmup";
+  const wasPeeked = state.peekedLineIds.includes(line.id);
+
+  if (!isWarmup && !wasPeeked) {
+    return `<span class="hidden-line">Line hidden. Recall first, then peek if you need it.</span>`;
+  }
+
   const opacity = Number(els.visibilityRange.value) / 100;
+
   if (state.mode === "letters") return escapeHtml(firstLetters(line.text));
   if (state.mode === "ghost") return `<span style="opacity:${opacity}" class="ghost-text">${escapeHtml(line.text)}</span>`;
   if (state.mode === "blanks") return blankWords(line.text);
   if (state.mode === "punctuation") return escapeHtml(line.text.replace(/[.,!?;:\u2014-]/g, ""));
+
   return `<span style="opacity:${opacity}">${escapeHtml(line.text)}</span>`;
 }
 
@@ -888,6 +900,12 @@ function peekLine(id) {
   state.stats.lineStats[id] = state.stats.lineStats[id] || { peeks: 0, latencies: [], text: line.text, character: line.character };
   state.stats.lineStats[id].peeks += 1;
   state.stats.lineStats[id].lastPeek = Date.now();
+  state.peekedLineIds = [...new Set([...state.peekedLineIds, Number(id)])];
+
+setTimeout(() => {
+  state.peekedLineIds = state.peekedLineIds.filter(lineId => lineId !== Number(id));
+  render();
+}, 2500);
   tactile("click");
   notify(`${line.character}: ${line.text}`, false);
   render();
@@ -1406,6 +1424,8 @@ function applyPreset(name) {
   };
   const preset = presets[name];
   if (!preset) return;
+  state.activePreset = name;
+  state.peekedLineIds = [];
   state.training = preset.training;
   state.trigger = preset.trigger;
   els.trainingSelect.value = preset.training;
