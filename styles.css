@@ -956,6 +956,12 @@ input[type="range"] {
   transition: opacity 0.2s ease, filter 0.2s ease;
 }
 
+.hidden-line {
+  color: var(--quiet);
+  font-style: italic;
+  opacity: 0.65;
+}
+
 .blank {
   display: inline-block;
   min-width: 52px;
