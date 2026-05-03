@@ -752,14 +752,20 @@ function isMonologue() {
   return state.characters.length === 1 || state.currentCharacter === "MONOLOGUE";
 }
 
+function shouldHardHideLine(line, isMine) {
+  if (!isMine) return false;
+
+  const wasPeeked = state.peekedLineIds.includes(line.id);
+  if (wasPeeked) return false;
+
+  return state.activePreset === "offbook" || state.activePreset === "stress";
+}
+
 function renderLineText(line, isMine) {
   if (!isMine) return escapeHtml(line.text);
 
-  const isWarmup = state.activePreset === "warmup";
-  const wasPeeked = state.peekedLineIds.includes(line.id);
-
-  if (!isWarmup && !wasPeeked) {
-    return `<span class="hidden-line">Line hidden. Recall first, then peek if you need it.</span>`;
+  if (shouldHardHideLine(line, isMine)) {
+    return `<span class="hidden-line">Hidden. Recall it first, then peek.</span>`;
   }
 
   const opacity = Number(els.visibilityRange.value) / 100;
