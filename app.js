@@ -757,28 +757,29 @@ function renderLineText(line, isMine) {
 
   const opacity = Number(els.visibilityRange.value) / 100;
   const wasPeeked = state.peekedLineIds.includes(line.id);
+  const fullText = escapeHtml(line.text);
 
   if (wasPeeked) {
-    return `<span style="opacity:1" class="ghost-text">${escapeHtml(line.text)}</span>`;
+    return `<span style="opacity:1">${fullText}</span>`;
   }
 
   if (state.mode === "letters") {
-    return `<span style="opacity:${Math.max(opacity, 0.35)}" class="ghost-text">${escapeHtml(firstLetters(line.text))}</span>`;
+    return `<span style="opacity:${opacity}">${escapeHtml(firstLetters(line.text))}</span>`;
   }
 
   if (state.mode === "ghost") {
-    return `<span style="opacity:${opacity}" class="ghost-text">${escapeHtml(line.text)}</span>`;
+    return `<span style="opacity:${opacity}">${fullText}</span>`;
   }
 
   if (state.mode === "blanks") {
-    return `<span style="opacity:${Math.max(opacity, 0.25)}" class="ghost-text">${blankWords(line.text)}</span>`;
+    return `<span style="opacity:${opacity}">${blankWords(line.text)}</span>`;
   }
 
   if (state.mode === "punctuation") {
-    return `<span style="opacity:${Math.max(opacity, 0.2)}" class="ghost-text">${escapeHtml(line.text.replace(/[.,!?;:\u2014-]/g, ""))}</span>`;
+    return `<span style="opacity:${opacity}">${escapeHtml(line.text.replace(/[.,!?;:\u2014-]/g, ""))}</span>`;
   }
 
-  return `<span style="opacity:${opacity}" class="ghost-text">${escapeHtml(line.text)}</span>`;
+  return `<span style="opacity:1">${fullText}</span>`;
 }
 
 function firstLetters(text) {
