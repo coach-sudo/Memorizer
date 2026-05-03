@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LineLock Actor Memorization Tool</title>
+  <meta name="theme-color" content="#090d12">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="mark">LL</div>
+      <div>
+        <h1>LineLock</h1>
+        <p>Black-box rehearsal simulator</p>
+      </div>
+    </div>
+    <div class="top-actions">
+      <span id="statusIndicator" class="status-pill">Waiting for script</span>
+      <button id="saveBtn" class="icon-btn" title="Save script">Save</button>
+      <button id="loadBtn" class="icon-btn" title="Load saved script">Load</button>
+      <button id="resetBtn" class="icon-btn danger" title="Clear everything">Reset</button>
+    </div>
+  </header>
+
+  <main class="app-shell">
+    <section id="setupPanel" class="setup-panel">
+      <div class="setup-copy">
+        <h2>Feed the machine. Lock the scene.</h2>
+        <p>Drop in sides, strip the noise, choose your role, and train until the weak lines reveal themselves.</p>
+      </div>
+      <div class="input-grid">
+        <label class="file-drop">
+          <input id="fileInput" type="file" accept=".txt,.fountain,.fdx,.html,.htm,.pdf">
+          <span>Feed script</span>
+          <small id="uploadStatus">PDF, text, Fountain, or HTML. Local cleaning begins immediately.</small>
+        </label>
+        <textarea id="scriptInput" spellcheck="false" placeholder="Paste your scene here. Example:&#10;&#10;MAYA&#10;You were late.&#10;&#10;ELI&#10;I know. I came anyway."></textarea>
+      </div>
+      <div class="setup-actions">
+        <button id="pasteModeBtn" class="secondary">Paste Mode</button>
+        <button id="sampleBtn" class="secondary">Use Sample Scene</button>
+        <button id="parseBtn" class="primary">Build Rehearsal</button>
+      </div>
+    </section>
+
+    <section id="workPanel" class="work-panel hidden">
+      <nav class="session-rail" aria-label="Rehearsal flows">
+        <button class="rail-btn active" data-open-panel="role"><span>Role</span></button>
+        <button class="rail-btn" data-open-panel="memory"><span>Train</span></button>
+        <button class="rail-btn" data-open-panel="chunk"><span>Chunk</span></button>
+        <button class="rail-btn" data-open-panel="partner"><span>Partner</span></button>
+        <button class="rail-btn" data-open-panel="proof"><span>Proof</span></button>
+        <button class="rail-btn" data-open-panel="display"><span>Gear</span></button>
+      </nav>
+      <aside class="sidebar">
+        <div class="flow-card primary-flow">
+          <label>Operating stages</label>
+          <div id="flowSteps" class="flow-steps"></div>
+          <p id="flowGuide" class="flow-guide">Import a script to begin.</p>
+        </div>
+
+        <div class="control-section compact-section" data-panel="memory">
+          <div class="section-head">
+            <span>Presets</span>
+            <small>One-tap setup</small>
+          </div>
+          <div class="preset-grid">
+            <button class="secondary preset" data-preset="warmup">Warm Up</button>
+            <button class="secondary preset" data-preset="memorize">Memorize</button>
+            <button class="secondary preset" data-preset="offbook">Off Book</button>
+            <button class="secondary preset" data-preset="stress">Stress</button>
+          </div>
+        </div>
+
+        <div class="control-section active-panel" data-panel="role">
+          <div class="section-head">
+            <span>Role</span>
+            <small>Who you are</small>
+          </div>
+          <div class="field">
+            <label for="characterSelect">Your role</label>
+            <select id="characterSelect"></select>
+          </div>
+          <div class="field">
+            <label for="searchInput">Find line</label>
+            <input id="searchInput" class="text-input" type="search" placeholder="Search dialogue or cue">
+          </div>
+        </div>
+
+        <div class="control-section" data-panel="memory">
+          <div class="section-head">
+            <span>Memory</span>
+            <small>Choose the page</small>
+          </div>
+          <div class="field">
+            <label>Memory View</label>
+            <div class="mode-grid">
+              <button class="mode active" data-mode="full">Script</button>
+              <button class="mode" data-mode="letters">1ST LTR</button>
+              <button class="mode" data-mode="ghost">Ghost</button>
+              <button class="mode" data-mode="blanks">Blanks</button>
+              <button class="mode" data-mode="tap">Tap</button>
+              <button class="mode" data-mode="punctuation">No Punctuation</button>
+            </div>
+          </div>
+          <div class="field compact flow-ghost">
+            <label for="visibilityRange">Ghost fade</label>
+            <input id="visibilityRange" type="range" min="0" max="100" value="100">
+            <button id="decayBtn" class="secondary full-width">Start 10s Ghost Decay</button>
+          </div>
+          <div class="field compact flow-blanks">
+            <label for="blankRange">Blank difficulty</label>
+            <input id="blankRange" type="range" min="1" max="3" value="1">
+          </div>
+          <div class="field flow-monologue">
+            <label for="monologueUnitSelect">Monologue units</label>
+            <select id="monologueUnitSelect">
+              <option value="word">Word by word</option>
+              <option value="sentence">Sentence by sentence</option>
+              <option value="line">Line by line</option>
+              <option value="beat">Beat by beat</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="control-section" data-panel="chunk">
+          <div class="section-head">
+            <span>Chunk</span>
+            <small>Shape the run</small>
+          </div>
+          <div class="field">
+            <label for="trainingSelect">Run Type</label>
+            <select id="trainingSelect">
+              <option value="scene">Whole scene</option>
+              <option value="ladder">Ladder build</option>
+              <option value="reverse">Reverse order</option>
+              <option value="trouble">Trouble spots</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="beatSelect">Beat</label>
+            <select id="beatSelect"></select>
+            <div id="beatTabs" class="beat-tabs"></div>
+          </div>
+          <div class="tool-row flow-ladder">
+            <button id="ladderBackBtn" class="secondary">Back Step</button>
+            <button id="ladderFirstBtn" class="secondary">First Step</button>
+          </div>
+        </div>
+
+        <div class="control-section" data-panel="partner">
+          <div class="section-head">
+            <span>Partner</span>
+            <small>Cues and listening</small>
+          </div>
+          <div class="field flow-partner">
+            <label>Partner reads</label>
+            <div id="readRoleList" class="check-list"></div>
+          </div>
+          <div class="field flow-partner">
+            <label for="triggerSelect">Advance By</label>
+            <select id="triggerSelect">
+              <option value="time">Auto-Timer</option>
+              <option value="tap">Tap-to-Next</option>
+              <option value="voice">Voice Trigger</option>
+            </select>
+          </div>
+          <div class="field flow-partner">
+            <label for="voiceSelect">Reader Voice</label>
+            <div class="select-action">
+              <select id="voiceSelect"></select>
+              <button id="refreshVoicesBtn" class="secondary mini">Refresh</button>
+            </div>
+          </div>
+          <div class="field flow-partner">
+            <label for="emotionSelect">Reader Energy</label>
+            <select id="emotionSelect">
+              <option value="neutral">Neutral</option>
+              <option value="aggressive">Aggressive</option>
+              <option value="vulnerable">Vulnerable</option>
+              <option value="warm">Warm</option>
+              <option value="urgent">Urgent</option>
+              <option value="low">Low and quiet</option>
+            </select>
+          </div>
+          <div class="field compact flow-partner">
+            <label for="promptSeconds">Whisper Help</label>
+            <input id="promptSeconds" type="range" min="3" max="12" value="6">
+          </div>
+          <div class="tool-row">
+            <button id="speakBtn" class="secondary">Start Partner</button>
+            <button id="listenBtn" class="secondary">Test Mic</button>
+          </div>
+          <div class="tool-row">
+            <button id="recordBtn" class="secondary">Record Run</button>
+            <button id="playbackBtn" class="secondary" disabled>Play Back</button>
+          </div>
+        </div>
+
+        <div class="control-section" data-panel="proof">
+          <div class="section-head">
+            <span>Proof</span>
+            <small>Pressure test</small>
+          </div>
+          <div class="tool-row">
+            <button id="masteredBtn" class="secondary">Mastered</button>
+            <button id="chaosBtn" class="secondary">Chaos</button>
+          </div>
+          <div class="tool-row">
+            <button id="analyticsBtn" class="secondary">Dashboard</button>
+            <button id="exportBtn" class="secondary">Export</button>
+          </div>
+          <button id="drillBtn" class="primary full-width">Drill Weak Lines</button>
+          <button id="backFromTroubleBtn" class="secondary full-width hidden">Back to Full Scene</button>
+        </div>
+
+        <div class="control-section compact-section" data-panel="display">
+          <div class="section-head">
+            <span>Gear</span>
+            <small>Quiet settings</small>
+          </div>
+          <div class="field compact">
+            <label for="sizeRange">Text Size</label>
+            <input id="sizeRange" type="range" min="16" max="30" value="20">
+          </div>
+          <div class="field compact">
+            <label for="speedRange">Scroll Pace</label>
+            <input id="speedRange" type="range" min="1" max="9" value="4">
+          </div>
+          <button id="scrollBtn" class="secondary full-width">Auto-Scroll</button>
+        </div>
+      </aside>
+
+      <section class="stage">
+        <div class="stage-toolbar">
+          <div>
+            <p id="sceneMeta">0 lines</p>
+            <h2 id="modeTitle">Full Script</h2>
+            <p id="modeHelp" class="mode-help">Choose a memory view, then run the scene.</p>
+            <div class="run-meter">
+              <div id="runProgress" class="run-progress"></div>
+            </div>
+            <div class="game-strip" aria-label="Training score">
+              <span><strong id="xpScore">0</strong> XP</span>
+              <span><strong id="streakCount">0</strong> streak</span>
+              <span id="challengeLabel">Challenge: build a rehearsal</span>
+            </div>
+            <p id="coachNote" class="coach-note">Import sides to begin.</p>
+          </div>
+          <details class="stage-tools">
+            <summary>Tools</summary>
+            <div class="beat-actions">
+              <div class="toolbar-group">
+                <button id="restartRunBtn" class="secondary">Restart</button>
+              </div>
+              <div class="toolbar-group">
+                <button id="sourceToggleBtn" class="secondary">Parsed Script</button>
+                <button id="editModeBtn" class="secondary">Edit</button>
+              </div>
+              <div class="toolbar-group">
+                <button id="slashModeBtn" class="secondary">Slash</button>
+                <button id="addBeatBtn" class="secondary">Add Beat</button>
+                <button id="clearBeatsBtn" class="secondary">Clear Beats</button>
+              </div>
+            </div>
+          </details>
+        </div>
+        <div id="tapPane" class="tap-pane hidden">
+          <div id="tapWord" class="tap-word">Tap to reveal each word</div>
+          <button id="tapNextBtn" class="primary">Next Word</button>
+        </div>
+        <div id="partnerBar" class="partner-bar hidden">
+          <span id="partnerStatus">Partner rehearsal ready</span>
+          <button id="continueBtn" class="secondary hidden">Continue</button>
+        </div>
+        <div id="scriptDisplay" class="script-display" aria-live="polite"></div>
+        <pre id="sourceDisplay" class="source-display hidden"></pre>
+        <div class="command-bar">
+          <button id="prevLineBtn" class="secondary">Prev</button>
+          <button id="nextActionBtn" class="primary command-main">Next: Build Rehearsal</button>
+          <button id="nextLineBtn" class="secondary">Next Line</button>
+        </div>
+      </section>
+    </section>
+  </main>
+  <div id="chaosOverlay" class="chaos-overlay hidden"></div>
+
+  <div id="analyticsPanel" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="analyticsTitle">
+    <div class="analytics">
+      <div class="analytics-head">
+        <div>
+            <p>Objective certainty</p>
+          <h2 id="analyticsTitle">Readiness Dashboard</h2>
+        </div>
+        <button id="closeAnalyticsBtn" class="icon-btn">Close</button>
+      </div>
+      <div class="stat-grid">
+        <div><span id="readinessScore">0%</span><small>ready</small></div>
+        <div><span id="peekCount">0</span><small>peeks</small></div>
+        <div><span id="practiceCount">0</span><small>turns</small></div>
+        <div><span id="troubleCount">0</span><small>red lines</small></div>
+      </div>
+      <div id="troubleList" class="trouble-list"></div>
+      <div class="dashboard-actions">
+        <button id="dashboardDrillBtn" class="primary">Drill Weak Lines</button>
+        <button id="dashboardResetBtn" class="secondary danger">Reset Engine</button>
+      </div>
+    </div>
+  </div>
+  <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

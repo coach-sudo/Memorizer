@@ -1,0 +1,10 @@
+{
+  "name": "LineLock Memory Gym",
+  "short_name": "LineLock",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#111827",
+  "theme_color": "#111827",
+  "description": "A local-first actor line memorization gym.",
+  "icons": []
+}
