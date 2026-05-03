@@ -712,6 +712,25 @@ input[type="range"] {
   font-size: 12px;
 }
 
+.fullscreen-mode .topbar {
+  display: none;
+}
+
+.fullscreen-mode .app-shell {
+  width: 100%;
+  height: 100vh;
+  margin: 0;
+}
+
+.fullscreen-mode .work-panel {
+  height: 100vh;
+  border-radius: 0;
+}
+
+.fullscreen-mode .stage {
+  border-radius: 0;
+}
+
 .game-strip {
   display: flex;
   flex-wrap: wrap;
